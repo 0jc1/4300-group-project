@@ -1,22 +1,21 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    
     if (email && password) {
       login();
-      router.push('/show-items'); // redirect after login
+      router.push("/show-items"); // redirect after login
     }
   };
 
@@ -42,26 +41,27 @@ export default function LoginPage() {
       >
         <h2 className="text-2xl font-bold text-center">Log In</h2>
         <input
-            type="email"
-            value={email}
-                onChange={(e) => setEmail(e.target.value)}
-             placeholder="Email"
-         className="w-full p-2 rounded bg-white text-black border border-gray-300"
-            />
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          className="w-full p-2 rounded bg-white text-black border border-gray-300"
+        />
 
-            <input
-  type="password"
-  value={password}
-  onChange={(e) => setPassword(e.target.value)}
-  placeholder="Password"
-  className="w-full p-2 rounded bg-white text-black border border-gray-300"
-/>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Password"
+          className="w-full p-2 rounded bg-white text-black border border-gray-300"
+        />
         <button
           type="submit"
-          className="bg-red-600 text-white w-full py-2 rounded"
+          className="bg-[#BB231D] text-white w-full py-2 rounded"
         >
           Log In
         </button>
+
         <p className="text-sm text-white underline text-center cursor-pointer">
           Forgot password?
         </p>
