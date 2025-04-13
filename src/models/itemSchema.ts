@@ -1,18 +1,29 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Model } from "mongoose";
 
+// Mongoose provides properties such as the _id in Document, we extend this
 interface IItem extends Document {
-    title: string;
-    description: string;
-    url: string;
+  owner: number;
+  title: string;
+  description?: string;
+  url?: string;
 }
 
-const ItemSchema: Schema = new Schema(
-    {
-        title: { type: String, required: true },
-        description: { type: String, required: true },
-        url: { type: String, required: true },
-    },
-    { timestamps: true }
-);
+const itemSchema = new Schema<IItem>({
+  owner: {
+    type: Number,
+  },
+  title: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+  },
+  url: {
+    type: String,
+    required: false,
+  },
+});
 
-export default mongoose.models.Item || mongoose.model<IItem>("Item", ItemSchema);
+const Item: Model<IItem> = mongoose.models.Item || mongoose.model<IItem>("Item", itemSchema);
+export default Item;

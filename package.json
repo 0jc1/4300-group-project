@@ -1,15 +1,16 @@
 {
-  "name": "lostandfound",
+  "name": "my-app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "mongoose": "^8.13.1",
+    "mongodb": "^6.15.0",
+    "mongoose": "^8.13.2",
     "next": "15.2.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
