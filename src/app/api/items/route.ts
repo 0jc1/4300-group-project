@@ -1,0 +1,43 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { writeFile } from 'fs/promises';
+import path from 'path';
+import connectMongoDB from '../../../../config/mongodb';
+import Item from '../../../models/itemSchema';
+
+//Create a async post function to handle posting of items added.
+export async function POST(request: NextRequest) {
+  //Collect all fields from the input fields of the form.
+  const formInfo = await request.formData();
+  const title = formInfo.get('title') as string;
+  const description = formInfo.get('description') as string;
+  const tags = JSON.parse(formInfo.get('tags') as string);
+  const location = formInfo.get('location') as string;
+  const image = formInfo.get('image') as File;
+
+  //Wait to connect to the MongoDatabase.
+  await connectMongoDB();
+
+  //Empty string to hold the URl of the image.
+  let imageUrl = '';
+
+  //Save the image if a file has been inputted.
+  if (image) {
+    const buff = Buffer.from(await image.arrayBuffer());
+    const filename = `${Date.now()}-${image.name}`;
+    const filepath = path.join(process.cwd(), 'public/uploads', filename);
+    await writeFile(filepath, buff);
+    imageUrl = '/uploads/${filename}';
+  }
+
+  //Now add the new item to the database from the collected form information.
+  await Item.create({
+    title,
+    description,
+    tags,
+    location,
+    imageUrl,
+  });
+
+  //If successful, display item added.
+  return NextResponse.json({ message: 'Item added!' }, { status: 201 });
+}
