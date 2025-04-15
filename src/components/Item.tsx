@@ -1,7 +1,6 @@
 import Card from "./Card";
 
 export default function Item({ item }: { item: any }) {
-  console.log("Item data:", item); // <-- ✅ Add this line
 
   return (
     <Card className="w-full max-w-sm">
