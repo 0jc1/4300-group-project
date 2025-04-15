@@ -1,11 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useRouter, useParams } from 'next/navigation';
-import Card from '../../../components/Card';
-
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { useRouter, useParams } from "next/navigation";
+import Card from "../../../components/Card";
 
 interface ItemProps {
   item: {
@@ -17,7 +16,7 @@ interface ItemProps {
 }
 
 export default function ShowItemDetails() {
-  const [item, setItem] = useState<ItemProps['item'] | null>(null);
+  const [item, setItem] = useState<ItemProps["item"] | null>(null);
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
@@ -26,11 +25,11 @@ export default function ShowItemDetails() {
     const fetchItem = async () => {
       try {
         const response = await fetch(`/api/items/${id}`);
-        if (!response.ok) throw new Error('Network response was not ok');
+        if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();
         setItem(data.item);
       } catch (error) {
-        console.log('Error from ShowItemDetails', error);
+        console.log("Error from ShowItemDetails", error);
       }
     };
 
@@ -40,17 +39,16 @@ export default function ShowItemDetails() {
   const onDeleteClick = async () => {
     try {
       const response = await fetch(`/api/items/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
-      if (!response.ok) throw new Error('Network response was not ok');
-      router.push('/show-items');
+      if (!response.ok) throw new Error("Network response was not ok");
+      router.push("/show-items");
     } catch (error) {
-      console.log('Error in ShowItemDetails_deleteClick', error);
+      console.log("Error in ShowItemDetails_deleteClick", error);
     }
   };
 
   return (
-    
     <div className="bg-white min-h-screen text-black py-10">
       <div className="max-w-5xl mx-auto px-4">
         <div className="mb-8">
@@ -68,41 +66,39 @@ export default function ShowItemDetails() {
           <hr className="my-4 border-gray-400" />
         </div>
         {item && (
-         <Card className="max-w-3xl mx-auto">
-         <div className="w-full h-72 relative">
-           <Image
-             src={item.url}
-             alt={item.title}
-             fill
-             className="object-cover rounded-md"
-           />
-         </div>
+          <Card className="max-w-3xl mx-auto">
+            <div className="w-full h-72 relative">
+              <Image
+                src={item.url}
+                alt={item.title}
+                fill
+                className="object-cover rounded-md"
+              />
+            </div>
 
-         <div className="mt-4 space-y-2">
-           <h2 className="text-xl font-semibold">{item.title}</h2>
-           <p className="text-gray-600">{item.description}</p>
-         </div>
+            <div className="mt-4 space-y-2">
+              <h2 className="text-xl font-semibold">{item.title}</h2>
+              <p className="text-gray-600">{item.description}</p>
+            </div>
 
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-           <button
-             type="button"
-             onClick={onDeleteClick}
-             className="w-full px-6 py-2 border border-gray-500 text-red-700 hover:bg-red-700 hover:text-white transition rounded"
-           >
-             Delete Item
-           </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              <button
+                type="button"
+                onClick={onDeleteClick}
+                className="w-full px-6 py-2 border border-gray-500 text-red-700 hover:bg-red-700 hover:text-white transition rounded"
+              >
+                Delete Item
+              </button>
 
-           <Link
-             href={`/update-item/${id}`}
-             className="w-full px-6 py-2 border border-gray-500 text-red-700 hover:bg-red-700 hover:text-white transition rounded text-center"
-           >
-             Edit Item
-           </Link>
-         </div>
-       </Card>
-       
+              <Link
+                href={`/update-item/${id}`}
+                className="w-full px-6 py-2 border border-gray-500 text-red-700 hover:bg-red-700 hover:text-white transition rounded text-center"
+              >
+                Edit Item
+              </Link>
+            </div>
+          </Card>
         )}
-
       </div>
     </div>
   );

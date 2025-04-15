@@ -1,16 +1,19 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
-// Mongoose provides properties such as the _id in Document, we extend this
+
 interface IItem extends Document {
-  owner: number;
+  owner?: number;
   title: string;
   description?: string;
-  url?: string;
+  tags?: string[];
+  location?: string;
+  imageUrl?: string;
 }
 
 const itemSchema = new Schema<IItem>({
   owner: {
     type: Number,
+    required: false,
   },
   title: {
     type: String,
@@ -19,9 +22,14 @@ const itemSchema = new Schema<IItem>({
   description: {
     type: String,
   },
-  url: {
+  tags: {
+    type: [String], 
+  },
+  location: {
     type: String,
-    required: false,
+  },
+  imageUrl: {
+    type: String,
   },
 });
 
