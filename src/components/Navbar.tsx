@@ -141,10 +141,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
-// const [isLoggedIn, setIsLoggedIn] = useState(false);
-//   // let isLoggedIn = false;
-
-//   const handleLogin = () => {
-//     setIsLoggedIn(prev=>!prev);
-//   }

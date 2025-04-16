@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 import mongoose from "mongoose";
-import connectMongoDB from "../../../../../config/mongodb";
+import connectMongoDB from "../../../../config/mongodb";
 import Item from "../../../../models/itemSchema";
 
 interface RouteParams {

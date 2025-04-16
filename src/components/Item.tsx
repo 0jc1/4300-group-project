@@ -8,6 +8,7 @@ interface ItemProps {
       title: string;
       description: string;
       url: string;
+      timestamp: string
     };
 }
 
