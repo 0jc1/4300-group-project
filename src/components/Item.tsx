@@ -1,31 +1,32 @@
-import Image from "next/image";
 import Card from "./Card";
-import Link from "next/link";
 
-interface ItemProps {
-    item: {
-      _id: number;
-      title: string;
-      description: string;
-      url: string;
-    };
-}
+export default function Item({ item }: { item: any }) {
 
-const Item = ({item}:ItemProps) => {
-    return (
-        <Card >
-           <div className="w-full h-68 relative">
-                <Image src={item.url} alt={item.title}  fill className="object-cover rounded-md" />
-            </div>
-            <h2 className="text-lg font-semibold mt-2">{item.title}</h2>
-            {/* <p className="text-gray-600">{item.description}</p> */}
-          <Link
-             href={`/show-item/${item._id}`}
-              className="bg-red-700 text-white px-4 py-2 rounded hover:bg-red-800 mt-4 inline-block"
-           >
-             more...
-           </Link>
-        </Card>
-    );
+  return (
+    <Card className="w-full max-w-sm">
+      {item.imageUrl && (
+        <img
+          src={item.imageUrl}
+          alt={item.title}
+          className="w-full h-40 object-cover rounded-t-md"
+        />
+      )}
+
+      <h2 className="text-xl font-bold mb-2 text-black">{item.title}</h2>
+      <p className="text-sm mb-1 text-gray-800">{item.description}</p>
+      <p className="text-xs text-gray-700">📍 {item.location}</p>
+      {item.tags && item.tags.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-2">
+          {item.tags.map((tag: string, index: number) => (
+            <span
+              key={index}
+              className="bg-red-100 text-red-700 px-2 py-1 text-xs rounded"
+            >
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
 }
-export default Item;

@@ -6,8 +6,9 @@ interface IItem extends Document {
   title: string;
   description?: string;
   tags?: string[];
-  location?: string;
-  imageUrl?: string;
+  location?: string; //Show the location of the item lost.
+  imageUrl?: string; //Show the imageURl of the item lost.
+  status?: string; //Show the status of the item lost; lost? returned?
 }
 
 const itemSchema = new Schema<IItem>({
@@ -30,6 +31,11 @@ const itemSchema = new Schema<IItem>({
   },
   imageUrl: {
     type: String,
+  },
+  status: { //Will need to be implemented later when we can finally edit items.
+    type: String,
+    enum: ["lost", "returned"],
+    default: "lost",
   },
 });
 

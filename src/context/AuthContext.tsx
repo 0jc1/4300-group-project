@@ -1,6 +1,7 @@
-'use client';
+// src/context/AuthContext.tsx
+"use client";
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect } from "react";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -10,11 +11,26 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const login = () => setIsLoggedIn(true);
-  const logout = () => setIsLoggedIn(false);
+  // This runs ONCE on mount, to sync with localStorage
+  useEffect(() => {
+    const storedStatus = localStorage.getItem("sniffed-out-auth");
+    if (storedStatus === "true") {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  const login = () => {
+    localStorage.setItem("sniffed-out-auth", "true");
+    setIsLoggedIn(true);
+  };
+
+  const logout = () => {
+    localStorage.removeItem("sniffed-out-auth");
+    setIsLoggedIn(false);
+  };
 
   return (
     <AuthContext.Provider value={{ isLoggedIn, login, logout }}>
@@ -25,6 +41,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };
