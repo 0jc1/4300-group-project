@@ -1,10 +1,15 @@
 import mongoose from "mongoose";
 
 const connectMongoDB = async (): Promise<void> => {
+  if (mongoose.connection.readyState >= 1) { 
+    // return when already connected
+    return;
+  }
+
   try {
-    const uri = process.env.MONGODB_URI;
+    let uri = process.env.MONGODB_URI;
     if (!uri) {
-      throw new Error("MONGODB_URI is not defined in environment variables.");
+      uri = "mongodb+srv://admin:1234password1234@cluster0.rvm2inn.mongodb.net/";
     }
 
     await mongoose.connect(uri);
