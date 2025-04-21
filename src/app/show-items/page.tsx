@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext"; // assuming you're using AuthContext
+import { useAuth } from "@/context/AuthContext"; 
 
 import Content from "../../components/Content";
 import Items from "../../components/Items";
