@@ -1,14 +1,5 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
-
-
-interface IItem extends Document {
-  owner?: number;
-  title: string;
-  description?: string;
-  tags?: string[];
-  location?: string;
-  imageUrl?: string;
-}
+import mongoose, { Schema, Model } from "mongoose";
+import { IItem } from "@/types";
 
 const itemSchema = new Schema<IItem>({
   owner: {
@@ -31,7 +22,7 @@ const itemSchema = new Schema<IItem>({
   imageUrl: {
     type: String,
   },
-});
+}, { timestamps: true });
 
 const Item: Model<IItem> = mongoose.models.Item || mongoose.model<IItem>("Item", itemSchema);
 export default Item;

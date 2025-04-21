@@ -3,6 +3,7 @@ import { writeFile } from "fs/promises";
 import path from "path";
 import connectMongoDB from "../../../../config/mongodb";
 import Item from "../../../models/itemSchema";
+import { IItem } from "@/types";
 
 //Create a async post function to handle posting of items added.
 export async function POST(request: NextRequest) {
@@ -43,10 +44,33 @@ export async function POST(request: NextRequest) {
 }
 
 // GET all items
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await connectMongoDB();
-    const items = await Item.find();
+    
+    const { searchParams } = new URL(request.url);
+    const sortBy = searchParams.get('sortBy') || 'newest';
+    
+    let sortOptions = {};
+    
+    switch (sortBy) {
+      case 'oldest':
+        sortOptions = { createdAt: 1 };
+        break;
+      case 'newest':
+        sortOptions = { createdAt: -1 };
+        break;
+      case 'recently-updated':
+        sortOptions = { updatedAt: -1 };
+        break;
+      default:
+        sortOptions = { createdAt: -1 }; 
+    }
+    
+    const items = await Item.find().sort(sortOptions);
+
+    console.log(items)
+
     return NextResponse.json({ items }, { status: 200 });
   } catch (error) {
     console.error("Error fetching items:", error);

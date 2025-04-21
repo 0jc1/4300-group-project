@@ -1,6 +1,7 @@
 import Card from "./Card";
+import { ItemType } from "@/types";
 
-export default function Item({ item }: { item: any }) {
+export default function Item({ item }: { item: ItemType }) {
 
   return (
     <Card className="w-full max-w-sm">
