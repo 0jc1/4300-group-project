@@ -2,48 +2,95 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function CreateItemPage() {
-  //Declare multiple variables to handle each form's field.
   const router = useRouter();
+  const { data: session } = useSession();
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [tags, setTags] = useState<string[]>([]); //So the user can add multiple tags.
+  const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [location, setLocation] = useState("");
   const [image, setImage] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null); //So the user can see a preview for the uploaded images.
+  const [preview, setPreview] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]); // <-- NEW for autocomplete
 
-  //A function to handle the change of file input and generate the URL of the preview of the image.
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    //If there is a file...
     if (file) {
       setImage(file);
-      setPreview(URL.createObjectURL(file)); //A temporary image preview.
+      setPreview(URL.createObjectURL(file));
     }
   };
 
-  //A function to handle submitting the form submission.
+  // NEW: when typing in location input
+  const handleLocationChanges = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const val = e.target.value;
+    setLocation(val);
+
+    if (val.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/places?input=${encodeURIComponent(val)}`);
+      const { predictions } = await res.json();
+      setSuggestions(predictions.map((p: any) => p.description));
+    } catch (err) {
+      console.error("Places autocomplete failed", err);
+      setSuggestions([]);
+    }
+  };
+
+  // NEW: when clicking "Use my current location"
+  const handleLocation = () => {
+    if (!navigator.geolocation) {
+      return alert("Geolocation not supported");
+    }
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const { latitude, longitude } = pos.coords;
+      try {
+        const res = await fetch(
+          `/api/location?lat=${latitude}&lng=${longitude}`
+        );
+        const json = await res.json();
+        if (json.address) setLocation(json.address);
+        else console.error("Reverse geocode error", json);
+      } catch (e) {
+        console.error("Reverse geocode fetch failed", e);
+      }
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!session?.user) {
+      console.error("You must be logged in to create an item.");
+      return;
+    }
 
     const formInfo = new FormData();
     formInfo.append("title", title);
     formInfo.append("description", description);
-    formInfo.append("tags", JSON.stringify(tags)); // This will send the tags as a JSON string.
+    formInfo.append("tags", JSON.stringify(tags));
     formInfo.append("location", location);
+    formInfo.append("userId", session.user.id);
+    formInfo.append("username", session.user.name || "");
+    formInfo.append("email", session.user.email || "");
 
-    //If there is an image to upload....
     if (image) formInfo.append("image", image);
 
-    //Now send the form and submit it to API route.
     const res = await fetch("/api/items", {
       method: "POST",
       body: formInfo,
     });
 
-    //If the form was submitted, then reset all the fields to add another item.
     if (res.ok) {
       setTitle("");
       setDescription("");
@@ -51,26 +98,23 @@ export default function CreateItemPage() {
       setLocation("");
       setImage(null);
       setPreview(null);
-      router.push("/show-items"); //Send user back to item list page.
+      router.push("/show-items");
     } else {
       console.error("Failed to submit item");
     }
   };
 
-  //HTML to handle the look of the form.
   return (
     <div className="min-h-screen bg-[url('/uploads/doggybkg.png')] bg-repeat bg-red-700 flex items-center justify-center px-4 py-10">
       <form
         onSubmit={handleSubmit}
         className="form-font-oswald bg-black text-white p-10 rounded-[30px] w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6"
       >
-        {/*The inputs of the left side of the form.*/}
+        {/* LEFT SIDE */}
         <div className="space-y-5">
-          {/* Header of the form*/}
           <h1 className="text-4xl font-bold">Report a Lost Item</h1>
 
           <div>
-            {/*Title and Info of the Item Name Input.*/}
             <label className="block mb-1 text-lg">Item Name</label>
             <input
               type="text"
@@ -83,7 +127,6 @@ export default function CreateItemPage() {
           </div>
 
           <div>
-            {/*Title and Info for the Description Input.*/}
             <label className="block mb-1 text-lg">Description</label>
             <textarea
               value={description}
@@ -95,7 +138,6 @@ export default function CreateItemPage() {
           </div>
 
           <div className="md:col-span-2">
-            {/*Title and Info for the Tags Input.*/}
             <label className="block mb-1 text-lg">Tags</label>
             <div className="flex flex-wrap gap-2 border border-white rounded-md p-2 bg-transparent text-white">
               {tags.map((tag, idx) => (
@@ -113,7 +155,6 @@ export default function CreateItemPage() {
                   </button>
                 </span>
               ))}
-              {/*This is for inputting the tags dynammically.*/}
               <input
                 type="text"
                 value={tagInput}
@@ -133,44 +174,46 @@ export default function CreateItemPage() {
             </div>
           </div>
 
-          {/*The input for the location.*/}
-          <div className="grid grid-cols-2 gap-2">
+          {/* LOCATION + AUTOCOMPLETE */}
+          <div className="relative grid grid-cols-2 gap-2">
             <input
               type="text"
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              onChange={handleLocationChanges}
               placeholder="Enter the last seen location"
               className="w-full p-3 text-white bg-transparent border border-white rounded-md placeholder-white focus:outline-none"
             />
-            {/*Clicking the use current location button.*/}
+            {suggestions.length > 0 && (
+              <ul className="absolute top-full left-0 right-0 bg-white text-black rounded-md shadow mt-1 max-h-48 overflow-auto z-10">
+                {suggestions.map((s, i) => (
+                  <li
+                    key={i}
+                    onClick={() => {
+                      setLocation(s);
+                      setSuggestions([]);
+                    }}
+                    className="px-3 py-2 hover:bg-gray-200 cursor-pointer"
+                  >
+                    {s}
+                  </li>
+                ))}
+              </ul>
+            )}
             <button
               type="button"
-              className="bg-gray-200 text-black rounded-md px-3 py-2 flex items-center justify-center text-sm font-semibold"
-              onClick={() => {
-                if (navigator.geolocation) {
-                  navigator.geolocation.getCurrentPosition((pos) => {
-                    setLocation(
-                      `Lat: ${pos.coords.latitude}, Lng: ${pos.coords.longitude}`
-                    );
-                  });
-                }
-              }}
+              onClick={handleLocation}
+              className="flex items-center gap-2 bg-gray-200 px-3 py-2 rounded-md text-black hover:bg-gray-300 transition"
             >
-              <img
-                src="/uploads/pin.png"
-                alt="Location Icon"
-                className="w-6 h-6"
-              />
+              <img src="/uploads/pin.png" alt="pin icon" className="w-6 h-6" />
               Use my current location
             </button>
           </div>
         </div>
 
-        {/*The side of the form for the image and upload button*/}
+        {/* RIGHT SIDE */}
         <div className="space-y-4 flex flex-col justify-start pt-[60px]">
           <label className="block text-lg mb-1">Item Image</label>
           <div className="w-full h-78 bg-white/10 border-2 border-white rounded-md flex items-center justify-center overflow-hidden">
-            {/*Contains the image preview before a user uploads a image.*/}
             {preview ? (
               <img
                 src={preview}
@@ -185,7 +228,6 @@ export default function CreateItemPage() {
               />
             )}
           </div>
-          {/*The upload button.*/}
           <label className="w-full bg-gray-200 text-black px-4 py-2 rounded-md font-semibold text-center cursor-pointer hover:bg-gray-300">
             Upload
             <input
@@ -197,7 +239,7 @@ export default function CreateItemPage() {
           </label>
         </div>
 
-        {/*The submit button which spans across teh whole form.*/}
+        {/* SUBMIT */}
         <div className="col-span-1 md:col-span-2">
           <button
             type="submit"
