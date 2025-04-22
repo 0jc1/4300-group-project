@@ -1,7 +1,9 @@
 import Card from "./Card";
-import Link from "next/link";
 
-export default function Item({ item }: { item: any }) {
+import { ItemType } from "@/types";
+
+export default function Item({ item }: { item: ItemType }) {
+
   return (
     <Link href={`/show-item/${item._id}`} className="w-full max-w-sm">
       <Card className="w-full min-h-[500px] flex flex-col justify-between p-4 bg-white/90 backdrop-blur-sm rounded-2xl shadow-md transition-transform duration-300 hover:scale-[1.03]">

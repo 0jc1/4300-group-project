@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+
 import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
 import logo from "../assets/UGAlogo_Arch_1in.png";
@@ -10,8 +11,10 @@ import logo from "../assets/UGAlogo_Arch_1in.png";
 const Navbar = () => {
   const router = useRouter();
   const pathname = usePathname();
+
   const { data: session, status } = useSession();
   const [showModal, setShowModal] = useState(false);
+
 
   const shouldHideCreateButton = ["/", "/login", "/register"].includes(
     pathname
@@ -131,6 +134,7 @@ const Navbar = () => {
         </div>
       )}
     </>
+  
   );
 };
 

@@ -3,6 +3,7 @@ import { writeFile } from "fs/promises";
 import path from "path";
 import connectMongoDB from "../../../../config/mongodb";
 import Item from "../../../models/itemSchema";
+import { IItem } from "@/types";
 
 export async function POST(request: NextRequest) {
   const formInfo = await request.formData();
@@ -45,6 +46,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ message: "Item added!" }, { status: 201 });
 }
 
+
 export async function GET(request: NextRequest) {
   try {
     await connectMongoDB();
@@ -70,6 +72,7 @@ export async function GET(request: NextRequest) {
     }
 
     const items = await Item.find().sort(sortOptions);
+
 
     return NextResponse.json({ items }, { status: 200 });
   } catch (error) {

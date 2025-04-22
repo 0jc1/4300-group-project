@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+
 import Item from "./Item";
 
-const dummyItems = [
+import { ItemType, LocationCoordinates } from "@/types";
+
+const dummyItems: ItemType[] = [
   {
     _id: "dummy-1",
     title: "Red Backpack",
@@ -23,6 +26,7 @@ const dummyItems = [
     tags: ["white", "tech", "airpods"],
     createdAt: new Date("2025-04-18T14:30:00"),
     updatedAt: new Date("2025-04-19T09:15:00"),
+
   },
   {
     _id: "dummy-3",
@@ -34,13 +38,36 @@ const dummyItems = [
     createdAt: new Date("2025-04-10T08:45:00"),
     updatedAt: new Date("2025-04-10T08:45:00"),
   },
+  }
+
 ];
 
+const campusLocations: Record<string, LocationCoordinates> = {
+  "Tate Student Center": { lat: 33.9746, lng: -83.3755 },
+  "Main Library": { lat: 33.9746, lng: -83.3733 },
+  "Ramsey Center": { lat: 33.9711, lng: -83.3789 },
+  "MLC": { lat: 33.9757, lng: -83.3751 },
+  "Science Learning Center": { lat: 33.9448, lng: -83.3776 }
+};
+
+const currentLocation: LocationCoordinates = { lat: 33.9746, lng: -83.3755 }; 
+
 export default function Items() {
-  const [UGAitems, setItems] = useState<any[]>([]);
-  const [sortOption, setSortOption] = useState("newest");
-  const [allItems, setAllItems] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+
+  const [UGAitems, setItems] = useState<ItemType[]>([]);
+  const [sortOption, setSortOption] = useState<string>("newest");
+  const [allItems, setAllItems] = useState<ItemType[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
+  const calcDist = (loc1: LocationCoordinates, loc2: LocationCoordinates): number => {
+    if (!loc1 || !loc2) return Infinity;
+    return Math.sqrt((loc1.lat - loc2.lat)^2 + (loc1.lng - loc2.lng)^2);
+  };
+
+  const getLocationCoordinates = (locationName : string): LocationCoordinates | null => {
+    if (!locationName) return null;
+    return campusLocations[locationName] || null;
+  };
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -48,6 +75,7 @@ export default function Items() {
         const res = await fetch(`/api/items?sortBy=${sortOption}`);
         if (!res.ok) throw new Error("Failed to fetch items");
         const data = await res.json();
+
         setItems(data.items);
       } catch (error) {
         console.error("Error fetching items:", error);
@@ -77,6 +105,7 @@ export default function Items() {
       );
     }
 
+
     setAllItems(combined);
   }, [UGAitems, sortOption]);
 
@@ -87,6 +116,7 @@ export default function Items() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
+
 
   const filteredItems = allItems.filter((item) =>
     item.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -130,17 +160,18 @@ export default function Items() {
               id="sort-select"
               value={sortOption}
               onChange={handleSortChange}
-              className="bg-white text-gray-700 border border-gray-300 rounded-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-red-300 transition"
-            >
+              className="bg-white text-gray-700 border border-gray-300 rounded-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-red-300 transition">
               <option value="newest">Newest</option>
               <option value="oldest">Oldest</option>
               <option value="recently-updated">Recently Updated</option>
+              <option value="nearest">Nearest Location</option>
             </select>
           </div>
         </div>
 
         {/* Items */}
         {filteredItems.length === 0 ? (
+
           <p>No UGA items available</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-items-center">

@@ -1,3 +1,4 @@
+
 import mongoose, { Schema, Document, Model } from "mongoose";
 
 interface IItem extends Document {
@@ -47,5 +48,6 @@ const itemSchema = new Schema<IItem>(
 
 const Item: Model<IItem> =
   mongoose.models.Item || mongoose.model<IItem>("Item", itemSchema);
+
 
 export default Item;
