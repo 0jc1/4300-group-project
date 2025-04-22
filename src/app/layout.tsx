@@ -1,5 +1,6 @@
-// src/app/layout.tsx
-import { AuthProvider } from "@/context/AuthContext";
+"use client";
+
+import { SessionProvider } from "next-auth/react"; // ✅ NEW
 import Navbar from "../components/Navbar";
 import "./globals.css";
 
@@ -11,10 +12,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AuthProvider>
+        <SessionProvider>
+          {" "}
           <Navbar />
           {children}
-        </AuthProvider>
+        </SessionProvider>
       </body>
     </html>
   );

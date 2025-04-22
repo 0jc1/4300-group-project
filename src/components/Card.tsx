@@ -1,16 +1,17 @@
-interface CardProps {
+"use client";
+
+export default function Card({
+  children,
+  className = "",
+}: {
   children: React.ReactNode;
   className?: string;
-}
-
-const Card = ({ children, className = "" }: CardProps) => {
+}) {
   return (
     <div
-      className={`border border-gray-300 shadow-sm rounded-lg p-4 bg-white ${className}`}
+      className={`bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden transition-transform hover:scale-102 duration-300 ${className}`}
     >
       {children}
     </div>
   );
-};
-
-export default Card;
+}

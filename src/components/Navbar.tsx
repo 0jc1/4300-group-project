@@ -3,170 +3,138 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+
+import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
 import logo from "../assets/UGAlogo_Arch_1in.png";
-import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const { isLoggedIn, login, logout } = useAuth();
-  const [menuOpen, setMenuOpen] = useState(false);
+
+  const { data: session, status } = useSession();
+  const [showModal, setShowModal] = useState(false);
+
 
   const shouldHideCreateButton = ["/", "/login", "/register"].includes(
     pathname
   );
 
+  const handleLogout = async () => {
+    await signOut({ redirect: true, callbackUrl: "/" });
+  };
+
+  const handleCreateClick = () => {
+    if (!session?.user) {
+      setShowModal(true);
+      return;
+    }
+    router.push("/create-item");
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+  };
+
   return (
-    <nav className="bg-[#141514] border-b border-white">
-      <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
-        <div className="relative flex h-20 items-center justify-between">
-          <div className="absolute inset-y-0 right-0 flex items-center md:hidden lg:hidden">
-            <button
-              type="button"
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
-              aria-controls="mobile-menu"
-              aria-expanded={menuOpen}
-            >
-              <svg
-                className="block h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-                />
-              </svg>
-            </button>
-          </div>
-
-          <Link className="flex flex-shrink-0 items-center" href="/">
-            <Image className="h-10 w-auto" src={logo} alt="UGA arch logo" />
-            <span className="hidden md:block text-white text-lg sm:text-xl md:text-2xl font-bold ml-2">
-              Sniffed Out
-            </span>
-          </Link>
-
-          <div className="hidden md:flex md:items-center md:space-x-4">
-            <Link
-              href="/show-items"
-              className="text-white text-xs sm:text-sm md:text-base hover:bg-gray-900 hover:text-white rounded-md px-3 py-2"
-            >
-              Home
-            </Link>
-            <Link
-              href="/about"
-              className="text-white text-xs sm:text-sm md:text-base hover:bg-gray-900 hover:text-white rounded-md px-3 py-2"
-            >
-              About
-            </Link>
-            <Link
-              href="/contact"
-              className="text-white text-xs sm:text-sm md:text-base hover:bg-gray-900 hover:text-white rounded-md px-3 py-2"
-            >
-              Contact
+    <>
+      <nav className="bg-[#141514] border-b border-white">
+        <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+          <div className="relative flex h-20 items-center justify-between">
+            {/* Logo */}
+            <Link className="flex flex-shrink-0 items-center" href="/">
+              <Image className="h-10 w-auto" src={logo} alt="UGA arch logo" />
+              <span className="hidden md:block text-white text-2xl font-bold ml-2">
+                Sniffed Out
+              </span>
             </Link>
 
-            {isLoggedIn && !shouldHideCreateButton && (
-              <Link
-                href="/create-item"
-                className="bg-[#BB231D] text-xs sm:text-sm text-white px-4 py-2 rounded hover:bg-red-800"
-              >
-                Create New Item
-              </Link>
-            )}
-          </div>
+            {/* Navigation Links */}
+            <div className="hidden md:ml-6 md:block">
+              <div className="flex space-x-4 items-center">
+                <Link
+                  href="/show-items"
+                  className="text-white hover:bg-gray-900 hover:text-white rounded-md px-3 py-2"
+                >
+                  Home
+                </Link>
+                <Link
+                  href="/about"
+                  className="text-white hover:bg-gray-900 hover:text-white rounded-md px-3 py-2"
+                >
+                  About
+                </Link>
+                <Link
+                  href="/contact"
+                  className="text-white hover:bg-gray-900 hover:text-white rounded-md px-3 py-2"
+                >
+                  Contact
+                </Link>
 
-          <div className="hidden md:flex items-center space-x-2">
-            {!isLoggedIn ? (
-              <button
-                onClick={() => router.push("/login")}
-                className="text-white text-xs sm:text-sm bg-gray-400 hover:bg-gray-500 rounded-md px-4 py-2"
-              >
-                Login | Register
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  logout();
-                  router.push("/");
-                }}
-                className="text-white text-xs sm:text-sm bg-gray-400 hover:bg-gray-500 rounded-md px-4 py-2"
-              >
-                Logout
-              </button>
-            )}
+                {/* Create Item Button always shows */}
+                {!shouldHideCreateButton && (
+                  <button
+                    onClick={handleCreateClick}
+                    className="bg-[#BB231D] text-white px-4 py-2 rounded hover:bg-red-800"
+                  >
+                    Create New Item
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Auth Button */}
+            <div className="hidden md:block md:ml-6">
+              <div className="flex items-center">
+                {status === "loading" ? (
+                  <div className="text-white">Loading...</div>
+                ) : session?.user ? (
+                  <div className="flex items-center space-x-4">
+                    <span className="text-white">
+                      Welcome, {session.user.name}!
+                    </span>
+                    <button
+                      onClick={handleLogout}
+                      className="text-white bg-gray-400 hover:bg-gray-500 rounded-md px-4 py-2"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => router.push("/login")}
+                    className="text-white bg-gray-400 hover:bg-gray-500 rounded-md px-4 py-2"
+                  >
+                    Login | Register
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </nav>
 
-      {menuOpen && (
-        <div className="md:hidden" id="mobile-menu">
-          <div className="space-y-1 px-2 pb-3 pt-2">
-            <Link
-              href="/show-items"
-              className="block text-white text-sm rounded-md px-3 py-2 hover:bg-gray-700"
-              onClick={() => setMenuOpen(false)}
+      {/* Popup Modal */}
+      {showModal && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/20 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl text-center w-80 shadow-lg">
+            <h2 className="text-xl font-bold mb-4 text-[#BB231D]">
+              Access Denied
+            </h2>
+            <p className="text-gray-700 mb-6">
+              You must have an account to create an item.
+            </p>
+            <button
+              onClick={closeModal}
+              className="bg-[#BB231D] text-white px-4 py-2 rounded hover:bg-red-800"
             >
-              Home
-            </Link>
-            <Link
-              href="/about"
-              className="block text-white text-sm rounded-md px-3 py-2 hover:bg-gray-700"
-              onClick={() => setMenuOpen(false)}
-            >
-              About
-            </Link>
-            <Link
-              href="/contact"
-              className="block text-white text-sm rounded-md px-3 py-2 hover:bg-gray-700"
-              onClick={() => setMenuOpen(false)}
-            >
-              Contact
-            </Link>
-
-            {isLoggedIn && !shouldHideCreateButton && (
-              <Link
-                href="/create-item"
-                className="block bg-[#BB231D] text-white text-sm px-4 py-2 rounded hover:bg-red-800"
-                onClick={() => setMenuOpen(false)}
-              >
-                Create New Item
-              </Link>
-            )}
-
-            {!isLoggedIn ? (
-              <button
-                onClick={() => {
-                  router.push("/login");
-                  setMenuOpen(false);
-                }}
-                className="block w-full text-left text-white bg-gray-700 hover:bg-gray-900 rounded-md px-4 py-2 mt-2"
-              >
-                Login | Register
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  logout();
-                  router.push("/");
-                  setMenuOpen(false);
-                }}
-                className="block w-full text-left text-white bg-gray-700 hover:bg-gray-900 rounded-md px-4 py-2 mt-2"
-              >
-                Logout
-              </button>
-            )}
+              Close
+            </button>
           </div>
         </div>
       )}
-    </nav>
+    </>
+  
   );
 };
 

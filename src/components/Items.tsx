@@ -1,7 +1,9 @@
 "use client";
-import Item from "./Item";
-import Link from "next/link";
+
 import { useState, useEffect } from "react";
+
+import Item from "./Item";
+
 import { ItemType, LocationCoordinates } from "@/types";
 
 const dummyItems: ItemType[] = [
@@ -13,7 +15,7 @@ const dummyItems: ItemType[] = [
     location: "Tate Student Center",
     tags: ["red", "backpack", "uga"],
     createdAt: new Date("2025-04-15T10:00:00"),
-    updatedAt: new Date("2025-04-15T10:00:00")
+    updatedAt: new Date("2025-04-15T10:00:00"),
   },
   {
     _id: "dummy-2",
@@ -23,7 +25,8 @@ const dummyItems: ItemType[] = [
     location: "Main Library",
     tags: ["white", "tech", "airpods"],
     createdAt: new Date("2025-04-18T14:30:00"),
-    updatedAt: new Date("2025-04-19T09:15:00")
+    updatedAt: new Date("2025-04-19T09:15:00"),
+
   },
   {
     _id: "dummy-3",
@@ -33,8 +36,10 @@ const dummyItems: ItemType[] = [
     location: "Ramsey Center",
     tags: ["bottle", "uga", "gym"],
     createdAt: new Date("2025-04-10T08:45:00"),
-    updatedAt: new Date("2025-04-10T08:45:00")
+    updatedAt: new Date("2025-04-10T08:45:00"),
+  },
   }
+
 ];
 
 const campusLocations: Record<string, LocationCoordinates> = {
@@ -48,6 +53,7 @@ const campusLocations: Record<string, LocationCoordinates> = {
 const currentLocation: LocationCoordinates = { lat: 33.9746, lng: -83.3755 }; 
 
 export default function Items() {
+
   const [UGAitems, setItems] = useState<ItemType[]>([]);
   const [sortOption, setSortOption] = useState<string>("newest");
   const [allItems, setAllItems] = useState<ItemType[]>([]);
@@ -66,39 +72,40 @@ export default function Items() {
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const url = `/api/items?sortBy=${sortOption}`
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("Network response was not ok");
-        const data = await response.json();
+        const res = await fetch(`/api/items?sortBy=${sortOption}`);
+        if (!res.ok) throw new Error("Failed to fetch items");
+        const data = await res.json();
+
         setItems(data.items);
       } catch (error) {
-        console.log("Error from ShowItemList:", error);
+        console.error("Error fetching items:", error);
       }
     };
 
     fetchItems();
   }, [sortOption]);
 
-  // Effect to combine and sort items
   useEffect(() => {
     let combined = [...UGAitems, ...dummyItems];
-    
-    if (sortOption === "nearest") {
-      // combined.sort((a, b) => {
-      //   const locA = getLocationCoordinates(a.location);
-      //   const locB = getLocationCoordinates(b.location);
-      //   const distA = calcDist(currentLocation, locA);
-      //   const distB = calcDist(currentLocation, locB);
-      //   return distA - distB;
-      // });
-    } else if (sortOption === "newest") {
-      combined.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    if (sortOption === "newest") {
+      combined.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
     } else if (sortOption === "oldest") {
-      combined.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      combined.sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
     } else if (sortOption === "recently-updated") {
-      combined.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      combined.sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      );
     }
-    
+
+
     setAllItems(combined);
   }, [UGAitems, sortOption]);
 
@@ -110,39 +117,50 @@ export default function Items() {
     setSearchQuery(e.target.value);
   };
 
-  return (
-    <section className="px-4 py-6">
-      <div className="container-xl lg:container m-auto px-4 py-6">
-        {/* Search and Sort  */}
-        <div className="mb-6 flex justify-between items-center bg-[#141514] p-2 rounded ">
 
-          {/* Search bar */}
-          <div className="flex-grow mr-4 max-w-md">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search items..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-10 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-              />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-              </div>
+  const filteredItems = allItems.filter((item) =>
+    item.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <section className="px-4 py-4">
+      <div className="container-xl lg:container m-auto px-4">
+        {/* Search and Sort */}
+        <div className="flex flex-col md:flex-row items-center justify-between mb-6 bg-black/40 backdrop-blur-md p-4 rounded-2xl shadow-2xl">
+          {" "}
+          <div className="relative w-full md:w-2/3 mb-4 md:mb-0">
+            <input
+              type="text"
+              placeholder="Search items..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="w-full bg-white text-gray-700 border border-gray-300 rounded-full py-2 px-6 pl-10 focus:outline-none focus:ring-2 focus:ring-red-300 transition"
+            />
+            <div className="absolute inset-y-0 left-3 flex items-center">
+              <svg
+                className="w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                ></path>
+              </svg>
             </div>
           </div>
-          
-          {/* Sort dropdown */}
-          <div className="">
-            <label htmlFor="sort-select" className="mr-2 text-white">Sort by:</label>
+          <div className="flex items-center">
+            <label htmlFor="sort-select" className="text-white mr-2">
+              Sort by:
+            </label>
             <select
               id="sort-select"
               value={sortOption}
               onChange={handleSortChange}
-              className="bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            >
+              className="bg-white text-gray-700 border border-gray-300 rounded-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-red-300 transition">
               <option value="newest">Newest</option>
               <option value="oldest">Oldest</option>
               <option value="recently-updated">Recently Updated</option>
@@ -151,11 +169,13 @@ export default function Items() {
           </div>
         </div>
 
-        {allItems.length === 0 ? (
+        {/* Items */}
+        {filteredItems.length === 0 ? (
+
           <p>No UGA items available</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {allItems.map((item, index) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-items-center">
+            {filteredItems.map((item, index) => (
               <Item key={item._id || index} item={item} />
             ))}
           </div>
