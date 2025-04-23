@@ -14,16 +14,20 @@ interface ItemProps {
     description: string;
     imageUrl: string;
     status: "lost" | "returned";
-    owner: string; // Make sure you have this now!!
+    owner: string;
+    email: string;
+    location: string;
+    tags: string[];
   };
 }
 
 export default function ShowItemDetails() {
   const [item, setItem] = useState<ItemProps["item"] | null>(null);
+  const [showPopup, setShowPopup] = useState(false);
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
-  const { data: session } = useSession(); // ⬅️ get user session
+  const { data: session } = useSession();
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -66,13 +70,30 @@ export default function ShowItemDetails() {
   };
 
   const isOwner = session?.user?.email === item?.email;
+
+  const handleMessageClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!session?.user) {
+      e.preventDefault();
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 2500);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[url('/uploads/Update_Background.png')] bg-repeat bg-center bg-cover flex items-center justify-center px-4 py-10">
+    <div className="relative min-h-screen w-full bg-[url('/uploads/Update_Background.png')] bg-cover bg-center bg-no-repeat flex items-center justify-center px-4 py-10">
+      {showPopup && (
+        <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm bg-black/30 animate-fadeInOut z-50">
+          <div className="bg-white text-black px-8 py-5 rounded-2xl text-lg shadow-lg font-semibold">
+            You must be logged in to message the owner.
+          </div>
+        </div>
+      )}
+
       <div className="w-full max-w-5xl bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl p-8 flex flex-col items-center">
         <div className="mb-8">
           <Link
             href="/show-items"
-            className="inline-block px-4 py-2 border border-gray-500 text-red-700 hover:bg-[#B7372F] hover:text-white transition rounded"
+            className="inline-block px-4 py-2 border border-[#BB231D] text-[#BB231D] hover:bg-[#BB231D] hover:text-white transition-all duration-200 rounded-full"
           >
             ← Back to Items
           </Link>
@@ -105,51 +126,93 @@ export default function ShowItemDetails() {
                 📍 {item.location}
               </p>
 
-              {/* Status Badge */}
               <div className="mt-4">
                 {item.status === "returned" ? (
                   <span className="px-3 py-1 text-sm rounded-full bg-green-200 text-green-800">
-                    ✅ Returned
+                    Returned
                   </span>
                 ) : (
                   <span className="px-3 py-1 text-sm rounded-full bg-red-200 text-red-800">
-                    🚨 Lost
+                    Lost
                   </span>
                 )}
               </div>
+
+              {item.tags && item.tags.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {item.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="bg-red-100 text-red-700 px-3 py-1 text-xs rounded-full"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* ACTION BUTTONS */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 justify-center">
-              {/* Delete Button */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
               <button
                 type="button"
                 onClick={onDeleteClick}
                 disabled={!isOwner}
-                className={`w-full px-6 py-2 border ${
+                className={`w-full px-6 py-2 font-semibold rounded-full text-lg transition-all duration-200 ${
                   isOwner
-                    ? "border-gray-500 text-red-700 hover:bg-red-700 hover:text-white"
-                    : "border-gray-300 text-gray-400 cursor-not-allowed"
-                } transition rounded`}
+                    ? "bg-[#BB231D] text-white hover:bg-red-800"
+                    : "bg-gray-300 text-gray-400 cursor-not-allowed"
+                }`}
               >
                 Delete Item
               </button>
 
-              {/* Edit Button */}
               <Link
                 href={isOwner ? `/update-item/${id}` : "#"}
-                className={`w-full px-6 py-2 border ${
+                className={`w-full px-6 py-2 font-semibold rounded-full text-lg text-center transition-all duration-200 ${
                   isOwner
-                    ? "border-gray-500 text-red-700 hover:bg-red-700 hover:text-white"
-                    : "border-gray-300 text-gray-400 cursor-not-allowed"
-                } transition rounded text-center`}
+                    ? "bg-black text-white hover:bg-[#333333]"
+                    : "bg-gray-300 text-gray-400 cursor-not-allowed"
+                }`}
               >
                 Edit Item
               </Link>
             </div>
+
+            {!isOwner && item?.email && (
+              <div className="flex justify-center mt-6">
+                <a
+                  href={`mailto:${item.email}?subject=Regarding your lost item "${item.title}"&body=Hi, I saw your post about your lost item on Sniffed Out.`}
+                  onClick={handleMessageClick}
+                  className="px-8 py-2 border-2 border-[#B7372F] text-[#B7372F] hover:bg-[#B7372F] hover:text-white transition-all duration-200 rounded-full font-semibold"
+                >
+                  Message Owner
+                </a>
+              </div>
+            )}
           </Card>
         )}
       </div>
+
+      <style jsx>{`
+        @keyframes fadeInOut {
+          0% {
+            opacity: 0;
+          }
+          10% {
+            opacity: 1;
+          }
+          90% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+          }
+        }
+
+        .animate-fadeInOut {
+          animation: fadeInOut 2.5s ease-in-out forwards;
+        }
+      `}</style>
     </div>
   );
 }

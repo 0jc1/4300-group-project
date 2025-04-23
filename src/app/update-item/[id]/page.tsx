@@ -8,6 +8,7 @@ export default function UpdateItem() {
   const params = useParams();
   const id = params?.id as string;
 
+  // Form state variables
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("lost");
@@ -18,6 +19,7 @@ export default function UpdateItem() {
   const [preview, setPreview] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
+  // Fetch existing item data on component mount
   useEffect(() => {
     const fetchItem = async () => {
       try {
@@ -25,6 +27,7 @@ export default function UpdateItem() {
         if (!res.ok) throw new Error("Failed to fetch item");
         const { item } = await res.json();
 
+        // Populate form with existing item values
         setTitle(item.title || "");
         setDescription(item.description || "");
         setStatus(item.status || "lost");
@@ -39,6 +42,7 @@ export default function UpdateItem() {
     if (id) fetchItem();
   }, [id]);
 
+  // Handle image selection and preview display
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -47,6 +51,7 @@ export default function UpdateItem() {
     }
   };
 
+  // Handle location input with autocomplete suggestions
   const handleLocationChanges = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -68,6 +73,7 @@ export default function UpdateItem() {
     }
   };
 
+  // Use browser geolocation to get current address
   const handleLocation = () => {
     if (!navigator.geolocation) {
       return alert("Geolocation not supported");
@@ -87,6 +93,7 @@ export default function UpdateItem() {
     });
   };
 
+  // Submit updated item data to the server
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -106,6 +113,7 @@ export default function UpdateItem() {
 
       if (!res.ok) throw new Error("Network error");
 
+      // Redirect to item detail page after update
       router.push(`/show-item/${id}`);
     } catch (err) {
       console.error("Error updating item:", err);
@@ -113,7 +121,8 @@ export default function UpdateItem() {
   };
 
   return (
-    <div className="min-h-screen bg-[url('/uploads/doggybkg.png')] bg-repeat bg-red-700 flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen w-full bg-[url('/uploads/doggybkg.png')] bg-repeat bg-[length:200px_200px] bg-red-700 flex items-center justify-center bg-cover bg-center px-4 py-10">
+      {/* Update Item Form */}
       <form
         onSubmit={handleSubmit}
         className="form-font-oswald bg-black text-white p-10 rounded-[30px] w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6"
@@ -122,6 +131,7 @@ export default function UpdateItem() {
         <div className="space-y-5">
           <h1 className="text-4xl font-bold">Update Item</h1>
 
+          {/* Title */}
           <div>
             <label className="block mb-1 text-lg">Item Name</label>
             <input
@@ -134,6 +144,7 @@ export default function UpdateItem() {
             />
           </div>
 
+          {/* Description */}
           <div>
             <label className="block mb-1 text-lg">Description</label>
             <textarea
@@ -145,7 +156,7 @@ export default function UpdateItem() {
             />
           </div>
 
-          {/* Status */}
+          {/* Status Dropdown */}
           <div>
             <label className="block mb-1 text-lg">Status</label>
             <select
@@ -162,45 +173,62 @@ export default function UpdateItem() {
             </select>
           </div>
 
-          {/* Tags */}
+          {/* Tags Section */}
           <div className="md:col-span-2">
             <label className="block mb-1 text-lg">Tags</label>
             <div className="flex flex-wrap gap-2 border border-white rounded-md p-2 bg-transparent text-white">
               {tags.map((tag, idx) => (
                 <span
                   key={idx}
-                  className="bg-white text-black px-3 py-1 rounded-full text-sm flex items-center gap-1"
+                  id={`tag-${idx}`}
+                  className="bg-white text-black px-3 py-1 rounded-full text-sm flex items-center gap-2 transition-all duration-300 ease-in-out hover:scale-95"
                 >
                   {tag}
                   <button
                     type="button"
-                    onClick={() => setTags(tags.filter((_, i) => i !== idx))}
-                    className="text-red-600 font-bold hover:text-red-800"
+                    onClick={() => {
+                      const tagElement = document.getElementById(`tag-${idx}`);
+                      if (tagElement) {
+                        tagElement.classList.add("opacity-0", "scale-75");
+                        setTimeout(() => {
+                          setTags(tags.filter((_, i) => i !== idx));
+                        }, 200);
+                      } else {
+                        setTags(tags.filter((_, i) => i !== idx));
+                      }
+                    }}
+                    className="text-red-600 font-bold hover:text-red-800 text-lg"
                   >
                     ×
                   </button>
                 </span>
               ))}
-              <input
-                type="text"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && tagInput.trim()) {
-                    e.preventDefault();
-                    if (!tags.includes(tagInput.trim())) {
-                      setTags([...tags, tagInput.trim()]);
+              {/* Tag input - limited to 5 tags */}
+              {tags.length < 5 && (
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && tagInput.trim()) {
+                      e.preventDefault();
+                      if (!tags.includes(tagInput.trim())) {
+                        setTags([...tags, tagInput.trim()]);
+                      }
+                      setTagInput("");
                     }
-                    setTagInput("");
-                  }
-                }}
-                placeholder="Add tags here"
-                className="bg-transparent placeholder-white text-white focus:outline-none"
-              />
+                  }}
+                  placeholder="Add tags here"
+                  className="bg-transparent placeholder-white text-white focus:outline-none"
+                />
+              )}
             </div>
+            <p className="text-xs text-gray-400 mt-1">
+              Maximum of 5 tags allowed.
+            </p>
           </div>
 
-          {/* Location with Autocomplete */}
+          {/* Location with autocomplete and current location */}
           <div className="relative grid grid-cols-2 gap-2">
             <input
               type="text"
@@ -225,6 +253,7 @@ export default function UpdateItem() {
                 ))}
               </ul>
             )}
+            {/* Use current location button */}
             <button
               type="button"
               onClick={handleLocation}
@@ -236,7 +265,7 @@ export default function UpdateItem() {
           </div>
         </div>
 
-        {/* RIGHT SIDE */}
+        {/* RIGHT SIDE - Image Preview and Upload */}
         <div className="space-y-4 flex flex-col justify-start pt-[60px]">
           <label className="block text-lg mb-1">Item Image</label>
           <div className="w-full h-78 bg-white/10 border-2 border-white rounded-md flex items-center justify-center overflow-hidden">
@@ -265,11 +294,11 @@ export default function UpdateItem() {
           </label>
         </div>
 
-        {/* SUBMIT */}
+        {/* Submit Button */}
         <div className="col-span-1 md:col-span-2">
           <button
             type="submit"
-            className="w-full bg-[#B7372F] hover:bg-red-800 text-white py-3 px-4 rounded-lg text-lg font-semibold"
+            className="w-full bg-[#BB231D] hover:bg-red-800 text-white py-3 px-4 rounded-lg text-lg font-semibold"
           >
             Update Item
           </button>

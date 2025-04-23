@@ -1,5 +1,6 @@
 "use client";
 
+// Reusable Card component with default styling and optional custom class
 export default function Card({
   children,
   className = "",
@@ -9,8 +10,9 @@ export default function Card({
 }) {
   return (
     <div
-      className={`bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden transition-transform hover:scale-102 duration-300 ${className}`}
+      className={`bg-white/100 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden transition-transform hover:scale-102 duration-300 ${className}`}
     >
+      {/* Content passed to the card */}
       {children}
     </div>
   );

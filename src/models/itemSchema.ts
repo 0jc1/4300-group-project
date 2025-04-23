@@ -1,6 +1,6 @@
-
 import mongoose, { Schema, Document, Model } from "mongoose";
 
+// Define the TypeScript interface for an item document
 interface IItem extends Document {
   title: string;
   description?: string;
@@ -9,9 +9,11 @@ interface IItem extends Document {
   imageUrl?: string;
   username?: string;
   email?: string;
-  status?: "lost" | "returned"; // ✅ Added this
+  owner: string; // User ID or identifier for the item's owner
+  status?: "lost" | "returned";
 }
 
+// Define the Mongoose schema for the Item model
 const itemSchema = new Schema<IItem>(
   {
     title: {
@@ -37,17 +39,22 @@ const itemSchema = new Schema<IItem>(
     email: {
       type: String,
     },
+    owner: {
+      // Optional owner field for associating item with a user
+      type: String,
+      required: false,
+    },
     status: {
       type: String,
-      enum: ["lost", "returned"], // ✅ Either "lost" or "returned"
-      default: "lost", // ✅ Default if nothing passed
+      enum: ["lost", "returned"],
+      default: "lost",
     },
   },
-  { timestamps: true }
+  { timestamps: true } // Automatically adds createdAt and updatedAt fields
 );
 
+// Use existing model if available, otherwise create a new one
 const Item: Model<IItem> =
   mongoose.models.Item || mongoose.model<IItem>("Item", itemSchema);
-
 
 export default Item;

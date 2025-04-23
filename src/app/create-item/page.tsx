@@ -8,6 +8,7 @@ export default function CreateItemPage() {
   const router = useRouter();
   const { data: session } = useSession();
 
+  // Form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -15,8 +16,9 @@ export default function CreateItemPage() {
   const [location, setLocation] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<string[]>([]); // <-- NEW for autocomplete
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
+  // Handle image upload and generate preview
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -25,7 +27,7 @@ export default function CreateItemPage() {
     }
   };
 
-  // NEW: when typing in location input
+  // Fetch location suggestions as user types
   const handleLocationChanges = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -47,7 +49,7 @@ export default function CreateItemPage() {
     }
   };
 
-  // NEW: when clicking "Use my current location"
+  // Use browser geolocation and reverse geocoding to get a physical address
   const handleLocation = () => {
     if (!navigator.geolocation) {
       return alert("Geolocation not supported");
@@ -67,6 +69,7 @@ export default function CreateItemPage() {
     });
   };
 
+  // Submit the form and upload the item
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -80,10 +83,8 @@ export default function CreateItemPage() {
     formInfo.append("description", description);
     formInfo.append("tags", JSON.stringify(tags));
     formInfo.append("location", location);
-    formInfo.append("userId", session.user.id);
     formInfo.append("username", session.user.name || "");
     formInfo.append("email", session.user.email || "");
-
     if (image) formInfo.append("image", image);
 
     const res = await fetch("/api/items", {
@@ -92,6 +93,7 @@ export default function CreateItemPage() {
     });
 
     if (res.ok) {
+      // Reset form and redirect
       setTitle("");
       setDescription("");
       setTags([]);
@@ -105,15 +107,17 @@ export default function CreateItemPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[url('/uploads/doggybkg.png')] bg-repeat bg-red-700 flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen w-full bg-[url('/uploads/doggybkg.png')] bg-repeat bg-[length:200px_200px] bg-red-700 flex items-center justify-center bg-cover bg-center px-4 py-10">
+      {/* Form container */}
       <form
         onSubmit={handleSubmit}
         className="form-font-oswald bg-black text-white p-10 rounded-[30px] w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6"
       >
-        {/* LEFT SIDE */}
+        {/* LEFT SIDE - Text fields */}
         <div className="space-y-5">
           <h1 className="text-4xl font-bold">Report a Lost Item</h1>
 
+          {/* Item name input */}
           <div>
             <label className="block mb-1 text-lg">Item Name</label>
             <input
@@ -126,6 +130,7 @@ export default function CreateItemPage() {
             />
           </div>
 
+          {/* Description input */}
           <div>
             <label className="block mb-1 text-lg">Description</label>
             <textarea
@@ -137,44 +142,52 @@ export default function CreateItemPage() {
             />
           </div>
 
+          {/* Tags input */}
           <div className="md:col-span-2">
             <label className="block mb-1 text-lg">Tags</label>
             <div className="flex flex-wrap gap-2 border border-white rounded-md p-2 bg-transparent text-white">
               {tags.map((tag, idx) => (
                 <span
                   key={idx}
-                  className="bg-white text-black px-3 py-1 rounded-full text-sm flex items-center gap-1"
+                  className="bg-white text-black px-3 py-1 rounded-full text-sm flex items-center gap-2"
                 >
                   {tag}
                   <button
                     type="button"
                     onClick={() => setTags(tags.filter((_, i) => i !== idx))}
-                    className="text-red-600 font-bold hover:text-red-800"
+                    className="text-red-600 font-bold hover:text-red-800 text-lg"
                   >
                     ×
                   </button>
                 </span>
               ))}
-              <input
-                type="text"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && tagInput.trim()) {
-                    e.preventDefault();
-                    if (!tags.includes(tagInput.trim())) {
-                      setTags([...tags, tagInput.trim()]);
+              {/* Tag entry input */}
+              {tags.length < 5 && (
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && tagInput.trim()) {
+                      e.preventDefault();
+                      if (tags.length >= 5) return;
+                      if (!tags.includes(tagInput.trim())) {
+                        setTags([...tags, tagInput.trim()]);
+                      }
+                      setTagInput("");
                     }
-                    setTagInput("");
-                  }
-                }}
-                placeholder="Add tags here"
-                className="bg-transparent placeholder-white text-white focus:outline-none"
-              />
+                  }}
+                  placeholder="Add tags here"
+                  className="bg-transparent placeholder-white text-white focus:outline-none"
+                />
+              )}
             </div>
+            <p className="text-xs text-gray-400 mt-1">
+              Maximum 5 tags allowed.
+            </p>
           </div>
 
-          {/* LOCATION + AUTOCOMPLETE */}
+          {/* Location input and autocomplete suggestions */}
           <div className="relative grid grid-cols-2 gap-2">
             <input
               type="text"
@@ -199,6 +212,7 @@ export default function CreateItemPage() {
                 ))}
               </ul>
             )}
+            {/* Use current location button */}
             <button
               type="button"
               onClick={handleLocation}
@@ -210,7 +224,7 @@ export default function CreateItemPage() {
           </div>
         </div>
 
-        {/* RIGHT SIDE */}
+        {/* RIGHT SIDE - Image preview and upload */}
         <div className="space-y-4 flex flex-col justify-start pt-[60px]">
           <label className="block text-lg mb-1">Item Image</label>
           <div className="w-full h-78 bg-white/10 border-2 border-white rounded-md flex items-center justify-center overflow-hidden">
@@ -228,6 +242,7 @@ export default function CreateItemPage() {
               />
             )}
           </div>
+          {/* File input for image */}
           <label className="w-full bg-gray-200 text-black px-4 py-2 rounded-md font-semibold text-center cursor-pointer hover:bg-gray-300">
             Upload
             <input
@@ -239,11 +254,11 @@ export default function CreateItemPage() {
           </label>
         </div>
 
-        {/* SUBMIT */}
+        {/* Submit button */}
         <div className="col-span-1 md:col-span-2">
           <button
             type="submit"
-            className="w-full bg-[#B7372F] hover:bg-red-800 text-white py-3 px-4 rounded-lg text-lg font-semibold"
+            className="w-full bg-[#BB231D] hover:bg-red-800 text-white py-3 px-4 rounded-lg text-lg font-semibold"
           >
             Submit
           </button>
