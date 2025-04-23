@@ -5,7 +5,10 @@ Welcome to Sniffed Out, a lost and found web application to help students find l
 # Our Team
 
 Jocelyn - Team Lead
+
 Myonni - Miro Captain
+
 Justin - Github Captain
+
 Abhinav - Communcation
 
