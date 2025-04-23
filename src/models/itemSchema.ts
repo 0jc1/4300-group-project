@@ -1,43 +1,60 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
-
+// Define the TypeScript interface for an item document
 interface IItem extends Document {
-  owner?: number;
   title: string;
   description?: string;
   tags?: string[];
-  location?: string; //Show the location of the item lost.
-  imageUrl?: string; //Show the imageURl of the item lost.
-  status?: string; //Show the status of the item lost; lost? returned?
+  location?: string;
+  imageUrl?: string;
+  username?: string;
+  email?: string;
+  owner: string; // User ID or identifier for the item's owner
+  status?: "lost" | "returned";
 }
 
-const itemSchema = new Schema<IItem>({
-  owner: {
-    type: Number,
-    required: false,
+// Define the Mongoose schema for the Item model
+const itemSchema = new Schema<IItem>(
+  {
+    title: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+    },
+    tags: {
+      type: [String],
+      default: [],
+    },
+    location: {
+      type: String,
+    },
+    imageUrl: {
+      type: String,
+    },
+    username: {
+      type: String,
+    },
+    email: {
+      type: String,
+    },
+    owner: {
+      // Optional owner field for associating item with a user
+      type: String,
+      required: false,
+    },
+    status: {
+      type: String,
+      enum: ["lost", "returned"],
+      default: "lost",
+    },
   },
-  title: {
-    type: String,
-    required: true,
-  },
-  description: {
-    type: String,
-  },
-  tags: {
-    type: [String], 
-  },
-  location: {
-    type: String,
-  },
-  imageUrl: {
-    type: String,
-  },
-  status: { //Will need to be implemented later when we can finally edit items.
-    type: String,
-    enum: ["lost", "returned"],
-    default: "lost",
-  },
-});
+  { timestamps: true } // Automatically adds createdAt and updatedAt fields
+);
 
-const Item: Model<IItem> = mongoose.models.Item || mongoose.model<IItem>("Item", itemSchema);
+// Use existing model if available, otherwise create a new one
+const Item: Model<IItem> =
+  mongoose.models.Item || mongoose.model<IItem>("Item", itemSchema);
+
 export default Item;

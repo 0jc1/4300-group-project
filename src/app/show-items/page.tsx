@@ -1,26 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext"; // assuming you're using AuthContext
-
 import Content from "../../components/Content";
 import Items from "../../components/Items";
 
+// This page displays all lost/returned items using the Items component
 const ShowItems = () => {
-  const { isLoggedIn } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoggedIn) {
-      router.push("/login");
-    }
-  }, [isLoggedIn, router]);
-
-  if (!isLoggedIn) return null; // optional: you can also show a spinner/loading
-
   return (
     <Content>
+      {/* Render list of items inside the shared layout wrapper */}
       <Items />
     </Content>
   );

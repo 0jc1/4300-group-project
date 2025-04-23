@@ -4,9 +4,9 @@ import path from "path";
 import connectMongoDB from "../../../../config/mongodb";
 import Item from "../../../models/itemSchema";
 
-//Create a async post function to handle posting of items added.
+// POST - Handle new item creation
 export async function POST(request: NextRequest) {
-  //Collect all fields from the input fields of the form.
+  // Parse form data from the incoming request
   const formInfo = await request.formData();
   const title = formInfo.get("title") as string;
   const description = formInfo.get("description") as string;
@@ -14,13 +14,20 @@ export async function POST(request: NextRequest) {
   const location = formInfo.get("location") as string;
   const image = formInfo.get("image") as File;
 
-  //Wait to connect to the MongoDatabase.
+  const username = formInfo.get("username") as string;
+  const email = formInfo.get("email") as string;
+
+  // Validate that user info is present
+  // Check for userId too
+  if (!username || !email) {
+    return NextResponse.json({ message: "Missing user info" }, { status: 400 });
+  }
+
   await connectMongoDB();
 
-  //Empty string to hold the URl of the image.
   let imageUrl = "";
 
-  //Save the image if a file has been inputted.
+  // Handle image upload if provided
   if (image) {
     const buff = Buffer.from(await image.arrayBuffer());
     const filename = `${Date.now()}-${image.name}`;
@@ -29,24 +36,51 @@ export async function POST(request: NextRequest) {
     imageUrl = `/uploads/${filename}`;
   }
 
-  //Now add the new item to the database from the collected form information.
+  // Save the item to the database
+  // Save userId under 'owner'
   await Item.create({
     title,
     description,
     tags,
     location,
     imageUrl,
+    username,
+    email,
   });
 
-  //If successful, display item added.
   return NextResponse.json({ message: "Item added!" }, { status: 201 });
 }
 
-// GET all items
-export async function GET() {
+// GET - Fetch all items with optional sorting
+export async function GET(request: NextRequest) {
   try {
     await connectMongoDB();
-    const items = await Item.find();
+
+    // Read sorting criteria from query params
+    // Sorting logic
+    const { searchParams } = new URL(request.url);
+    const sortBy = searchParams.get("sortBy") || "newest";
+
+    let sortOptions = {};
+
+    // Determine sorting strategy
+    switch (sortBy) {
+      case "oldest":
+        sortOptions = { createdAt: 1 };
+        break;
+      case "newest":
+        sortOptions = { createdAt: -1 };
+        break;
+      case "recently-updated":
+        sortOptions = { updatedAt: -1 };
+        break;
+      default:
+        sortOptions = { createdAt: -1 };
+    }
+
+    // Retrieve sorted items from database
+    const items = await Item.find().sort(sortOptions);
+
     return NextResponse.json({ items }, { status: 200 });
   } catch (error) {
     console.error("Error fetching items:", error);
